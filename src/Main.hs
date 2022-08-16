@@ -27,4 +27,6 @@ main = do
         Right ins -> do
             let vm = initVM ins
             let vm' = exec vm
-            putStr $ finalize vm'
+            if stackEmpty vm'
+                then putStr $ finalize vm'
+                else putStr $ fmt $ head $ stack vm'

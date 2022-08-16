@@ -1,6 +1,5 @@
 module Commands where
 
-import Text.Read (readMaybe)
 import VM
 
 apply :: (Value -> Either VM Value) -> VM -> VM
@@ -21,7 +20,22 @@ apply2 f vm = case pop vm of
 
 add :: VM -> VM
 add vm = apply2 (\x y -> case (x, y) of
-    (Int i, Int j) -> Right $ Int (i + j)
+    -- Same type numbers
+    (Int i, Int j)     -> Right $ Int (i + j)
+    (Float i, Float j) -> Right $ Float (i + j)
+    -- Different type numbers
+    (Int i, Float j) -> Right $ Float (fromIntegral i + j)
+    (Float i, Int j) -> Right $ Float (i + fromIntegral j)
+    -- String concatenation
+    (String i, String j) -> Right $ String (i ++ j)
+    (String i, Int j)    -> Right $ String (i ++ show j)
+    (Int i, String j)    -> Right $ String (show i ++ j)
+    (String i, Bool j)   -> Right $ String (i ++ show j)
+    (Bool i, String j)   -> Right $ String (show i ++ j)
+    (String i, List j)   -> Right $ String (i ++ show j)
+    (List i, String j)   -> Right $ String (show i ++ j)
+    -- Join lists
+    (List i, List j) -> Right $ List (i ++ j)
     _              -> Left $ err "Type error" vm) vm
 
 sub :: VM -> VM
@@ -49,14 +63,14 @@ step vm = do
     let instr = instrs vm !! ip vm
     let c = code instr
     let vm' = case c of
-            "." -> putv vm
-            "+" -> add vm
-            "-" -> sub vm
-            "*" -> mul vm
-            "/" -> Commands.div vm
-            _   -> case readMaybe c :: Maybe Int of
-                Just n  -> push (Int n) vm
-                Nothing -> err ("Unknown instruction: " ++ c) vm
+            Op op -> case op of
+                "." -> putv vm
+                "+" -> add vm
+                "-" -> sub vm
+                "*" -> mul vm
+                "/" -> Commands.div vm
+                _   -> err ("Unknown instruction: " ++ op) vm
+            Push x -> push x vm
     vm' { ip = ip vm' + 1 }
 
 exec :: VM -> VM
