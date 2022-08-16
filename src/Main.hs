@@ -7,7 +7,7 @@ import VM
 import Commands
 
 help :: IO ()
-help = putStrLn "Usage: skyl <file>"
+help = putStrLn "Usage: skyl [FILE] [OPTIONS]"
 
 version :: IO ()
 version = putStrLn "0.1.0"

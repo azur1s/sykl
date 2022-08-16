@@ -24,6 +24,21 @@ add vm = apply2 (\x y -> case (x, y) of
     (Int i, Int j) -> Right $ Int (i + j)
     _              -> Left $ err "Type error" vm) vm
 
+sub :: VM -> VM
+sub vm = apply2 (\x y -> case (x, y) of
+    (Int i, Int j) -> Right $ Int (j - i)
+    _              -> Left $ err "Type error" vm) vm
+
+mul :: VM -> VM
+mul vm = apply2 (\x y -> case (x, y) of
+    (Int i, Int j) -> Right $ Int (i * j)
+    _              -> Left $ err "Type error" vm) vm
+
+div :: VM -> VM
+div vm = apply2 (\x y -> case (x, y) of
+    (Int i, Int j) -> Right $ Int (Prelude.div j i)
+    _              -> Left $ err "Type error" vm) vm
+
 putv :: VM -> VM
 putv vm = apply (\x -> Left $ out (fmt x) vm) vm
 
@@ -34,8 +49,11 @@ step vm = do
     let instr = instrs vm !! ip vm
     let c = code instr
     let vm' = case c of
-            "$" -> putv vm
+            "." -> putv vm
             "+" -> add vm
+            "-" -> sub vm
+            "*" -> mul vm
+            "/" -> Commands.div vm
             _   -> case readMaybe c :: Maybe Int of
                 Just n  -> push (Int n) vm
                 Nothing -> err ("Unknown instruction: " ++ c) vm
